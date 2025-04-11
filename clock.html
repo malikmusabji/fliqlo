@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Large Flip Clock</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .clock-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 96vw;
+            max-width: 1600px; /* Increased max width */
+            position: relative;
+        }
+        
+        .flip-unit-container {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+            justify-content: center;
+            transform: scale(1.3); /* Default larger size */
+        }
+        
+        /* Card Styles */
+        .flip-card {
+            display: block;
+            position: relative;
+            width: clamp(160px, 48vw, 500px);
+            height: clamp(220px, 58vw, 600px);
+            perspective: 1200px;
+            background: #111;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .digit-top, 
+        .digit-bottom,
+        .digit-top-flip, 
+        .digit-bottom-flip {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            background: #111;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8) inset;
+        }
+        
+        .digit-top {
+            align-items: flex-end;
+            top: 0;
+            z-index: 1;
+            border-bottom: 3px solid #000;
+        }
+        
+        .digit-bottom {
+            align-items: flex-start;
+            bottom: 0;
+            z-index: 1;
+            border-top: 3px solid #000;
+        }
+        
+        .digit {
+            font-size: clamp(130px, 40vw, 400px);
+            font-weight: bold;
+            font-family: Impact, Charcoal, sans-serif; /* Default font set to Impact */
+            color: #c0c0c0;
+            line-height: clamp(220px, 58vw, 600px);
+            transform: scaleY(1.2) scaleX(0.85); /* Make digits taller and narrower */
+            display: flex;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .digit-top .digit {
+            transform: translateY(50%) scaleY(1.2) scaleX(0.85);
+        }
+        
+        .digit-bottom .digit {
+            transform: translateY(-50%) scaleY(1.2) scaleX(0.85);
+        }
+        
+        /* Flip Animation Parts */
+        .digit-top-flip {
+            top: 0;
+            align-items: flex-end;
+            transform-origin: bottom;
+            transform: rotateX(0);
+            backface-visibility: hidden;
+            z-index: 2;
+            border-bottom: 3px solid #000;
+        }
+        
+        .digit-bottom-flip {
+            bottom: 0;
+            align-items: flex-start;
+            transform-origin: top;
+            transform: rotateX(90deg);
+            backface-visibility: hidden;
+            z-index: 1;
+            border-top: 3px solid #000;
+        }
+        
+        .digit-top-flip .digit {
+            transform: translateY(50%) scaleY(1.2) scaleX(0.85);
+        }
+        
+        .digit-bottom-flip .digit {
+            transform: translateY(-50%) scaleY(1.2) scaleX(0.85);
+        }
+        
+        .flip-card.flipping .digit-top-flip {
+            animation: flip-top 0.3s linear;
+            animation-fill-mode: forwards;
+        }
+        
+        .flip-card.flipping .digit-bottom-flip {
+            animation: flip-bottom 0.3s linear 0.3s;
+            animation-fill-mode: forwards;
+        }
+        
+        @keyframes flip-top {
+            0% {
+                transform: rotateX(0);
+                z-index: 2;
+            }
+            100% {
+                transform: rotateX(-90deg);
+                z-index: 2;
+            }
+        }
+        
+        @keyframes flip-bottom {
+            0% {
+                transform: rotateX(90deg);
+                z-index: 2;
+            }
+            100% {
+                transform: rotateX(0);
+                z-index: 2;
+            }
+        }
+        
+        .am-pm {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: clamp(20px, 5vw, 40px);
+            font-weight: bold;
+            color: #c0c0c0;
+            z-index: 3;
+            font-family: Impact, Charcoal, sans-serif; /* Default font set to Impact */
+            transition: all 0.3s ease;
+        }
+        
+        .format-toggle {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: clamp(12px, 2vw, 16px);
+            color: #666;
+            background: transparent;
+            border: 1px solid #444;
+            border-radius: 3px;
+            padding: 4px 8px;
+        }
+        
+        .format-toggle:hover {
+            color: #fff;
+            border-color: #666;
+        }
+        
+        /* Controls panel */
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 100;
+        }
+        
+        .controls-toggle {
+            align-self: flex-end;
+            background: #222;
+            color: #888;
+            border: 1px solid #444;
+            border-radius: 3px;
+            font-size: 12px;
+            padding: 3px 6px;
+            cursor: pointer;
+        }
+        
+        .controls-toggle:hover {
+            color: #fff;
+            border-color: #666;
+        }
+        
+        .controls-panel {
+            display: none;
+            background: rgba(30, 30, 30, 0.85);
+            border-radius: 5px;
+            padding: 8px;
+            border: 1px solid #444;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        .controls-panel.visible {
+            display: block;
+        }
+        
+        .control-group {
+            margin-bottom: 6px;
+        }
+        
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-label {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 3px;
+            display: block;
+        }
+        
+        .control-input {
+            width: 100%;
+            background: #333;
+            color: #ddd;
+            border: 1px solid #555;
+            border-radius: 3px;
+            font-size: 10px;
+            padding: 2px 4px;
+        }
+        
+        .zoom-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .zoom-button {
+            flex: 1;
+            background: #333;
+            color: #ddd;
+            border: 1px solid #555;
+            border-radius: 3px;
+            font-size: 10px;
+            padding: 2px 0;
+            cursor: pointer;
+        }
+        
+        .zoom-button:hover {
+            background: #444;
+            color: #fff;
+        }
+        
+        /* Font classes */
+        .font-impact {
+            font-family: Impact, Charcoal, sans-serif;
+        }
+        
+        .font-arial-narrow {
+            font-family: 'Arial Narrow', Arial, sans-serif;
+        }
+        
+        .font-arial {
+            font-family: Arial, sans-serif;
+        }
+        
+        .font-helvetica {
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        
+        .font-digital {
+            font-family: 'Segment7', 'DS-Digital', monospace;
+        }
+        
+        .font-oswald {
+            font-family: 'Oswald', sans-serif;
+        }
+        
+        .font-montserrat {
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .font-roboto {
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .font-bauhaus {
+            font-family: 'Bauhaus 93', 'Arial Black', sans-serif;
+        }
+        
+        /* Fullscreen message */
+        .fullscreen-message {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #888;
+            font-family: Arial, sans-serif;
+            text-align: right;
+        }
+        
+        /* Media queries for different devices */
+        @media (max-width: 768px) {
+            .clock-container {
+                width: 98vw;
+            }
+            
+            .flip-unit-container {
+                gap: 6px;
+            }
+            
+            .am-pm {
+                bottom: 15px;
+                left: 15px;
+            }
+        }
+        
+        /* Vertical layout for mobile devices */
+        @media (max-width: 600px), (orientation: portrait) {
+            .flip-unit-container {
+                flex-direction: column;
+                gap: 16px;
+                transform: scale(1.1);
+            }
+            
+            .flip-card {
+                width: 80vw;
+                height: 40vh;
+                max-height: 300px;
+            }
+            
+            .digit {
+                font-size: clamp(80px, 25vw, 200px);
+                line-height: 40vh;
+            }
+            
+            .am-pm {
+                bottom: 10px;
+                left: auto;
+                right: 10px;
+                font-size: clamp(16px, 5vw, 30px);
+            }
+            
+            .controls {
+                bottom: 10px;
+                left: 10px;
+                right: auto;
+            }
+        }
+
+        /* Digital font */
+        @font-face {
+            font-family: 'Segment7';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/Seven-Segment/1.0.0/Seven-Segment.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+    </style>
+    <!-- Additional font imports -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Montserrat:wght@700&family=Roboto:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="fullscreen-message" id="fullscreenMessage">please press F11 for full screen</div>
+    
+    <div class="clock-container">
+        <div class="flip-unit-container">
+            <div class="flip-card" id="hour-card">
+                <div class="am-pm" id="ampm">PM</div>
+                <div class="digit-top">
+                    <div class="digit">0</div>
+                </div>
+                <div class="digit-bottom">
+                    <div class="digit">0</div>
+                </div>
+                <div class="digit-top-flip">
+                    <div class="digit">0</div>
+                </div>
+                <div class="digit-bottom-flip">
+                    <div class="digit">0</div>
+                </div>
+            </div>
+            <div class="flip-card" id="minute-card">
+                <div class="digit-top">
+                    <div class="digit">00</div>
+                </div>
+                <div class="digit-bottom">
+                    <div class="digit">00</div>
+                </div>
+                <div class="digit-top-flip">
+                    <div class="digit">00</div>
+                </div>
+                <div class="digit-bottom-flip">
+                    <div class="digit">00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="controls-toggle" id="controlsToggle">⚙</button>
+        <div class="controls-panel" id="controlsPanel">
+            <div class="control-group">
+                <span class="control-label">Zoom</span>
+                <div class="zoom-buttons">
+                    <button class="zoom-button" data-zoom="0.8">-</button>
+                    <button class="zoom-button" data-zoom="1.0">Reset</button>
+                    <button class="zoom-button" data-zoom="1.2">+</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="control-label">Font</span>
+                <select class="control-input" id="fontSelect">
+                    <option value="font-impact">Impact</option>
+                    <option value="font-arial-narrow">Arial Narrow</option>
+                    <option value="font-arial">Arial</option>
+                    <option value="font-helvetica">Helvetica</option>
+                    <option value="font-digital">Digital</option>
+                    <option value="font-oswald">Oswald</option>
+                    <option value="font-montserrat">Montserrat</option>
+                    <option value="font-roboto">Roboto</option>
+                    <option value="font-bauhaus">Bauhaus</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <span class="control-label">Format</span>
+                <select class="control-input" id="formatSelect">
+                    <option value="12">12-hour</option>
+                    <option value="24">24-hour</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let is24HourFormat = false;
+        let lastHour = -1;
+        let lastMinute = -1;
+        let animationInProgress = false;
+        let currentZoom = 1.3; // Start with larger default zoom
+        let currentFont = 'font-impact'; // Default font set to Impact
+        let isFullscreen = false;
+        
+        // Get DOM elements
+        const hourCard = document.getElementById('hour-card');
+        const minuteCard = document.getElementById('minute-card');
+        const ampmElement = document.getElementById('ampm');
+        const controlsToggle = document.getElementById('controlsToggle');
+        const controlsPanel = document.getElementById('controlsPanel');
+        const zoomButtons = document.querySelectorAll('.zoom-button');
+        const fontSelect = document.getElementById('fontSelect');
+        const formatSelect = document.getElementById('formatSelect');
+        const fullscreenMessage = document.getElementById('fullscreenMessage');
+        
+        // Fullscreen detection
+        function checkFullscreen() {
+            isFullscreen = document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement;
+                
+            // Hide fullscreen message if in fullscreen mode
+            if (isFullscreen) {
+                fullscreenMessage.style.display = 'none';
+            } else {
+                fullscreenMessage.style.display = 'block';
+            }
+        }
+        
+        // Add fullscreen event listeners
+        document.addEventListener('fullscreenchange', checkFullscreen);
+        document.addEventListener('webkitfullscreenchange', checkFullscreen);
+        document.addEventListener('mozfullscreenchange', checkFullscreen);
+        document.addEventListener('MSFullscreenChange', checkFullscreen);
+        
+        // Controls toggle
+        controlsToggle.addEventListener('click', () => {
+            controlsPanel.classList.toggle('visible');
+        });
+        
+        // Hide controls when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.controls') && controlsPanel.classList.contains('visible')) {
+                controlsPanel.classList.remove('visible');
+            }
+        });
+        
+        // Check orientation and adjust layout
+        function checkOrientation() {
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isMobile = window.innerWidth <= 600;
+            
+            // Apply appropriate zoom based on device and orientation
+            if (isPortrait || isMobile) {
+                // Ensure vertical layout is applied even if CSS media query isn't triggered
+                document.querySelector('.flip-unit-container').style.flexDirection = 'column';
+                document.querySelector('.flip-unit-container').style.gap = '16px';
+                
+                // Position AM/PM indicator appropriately in vertical mode
+                ampmElement.style.right = '10px';
+                ampmElement.style.left = 'auto';
+            } else {
+                // Ensure horizontal layout for landscape
+                document.querySelector('.flip-unit-container').style.flexDirection = 'row';
+                document.querySelector('.flip-unit-container').style.gap = `${Math.max(4, 12 * (currentZoom / 1.3))}px`;
+                
+                // Position AM/PM indicator appropriately in horizontal mode
+                ampmElement.style.left = '20px';
+                ampmElement.style.right = 'auto';
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        
+        // Zoom controls
+        zoomButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const zoomValue = parseFloat(button.dataset.zoom);
+                if (button.innerText === 'Reset') {
+                    currentZoom = 1.3; // Reset to larger default zoom
+                } else {
+                    currentZoom *= zoomValue;
+                }
+                
+                // Apply zoom to the flip-unit-container
+                document.querySelector('.flip-unit-container').style.transform = `scale(${currentZoom})`;
+                
+                // Update container spacing
+                checkOrientation(); // This will handle gap adjustment based on orientation
+            });
+        });
+        
+        // Font selection
+        fontSelect.addEventListener('change', () => {
+            const selectedFont = fontSelect.value;
+            
+            // Remove previous font class and add new one
+            document.querySelectorAll('.digit, .am-pm').forEach(element => {
+                element.classList.remove(currentFont);
+                element.classList.add(selectedFont);
+            });
+            
+            currentFont = selectedFont;
+        });
+        
+        // Format selection
+        formatSelect.addEventListener('change', () => {
+            is24HourFormat = formatSelect.value === '24';
+            updateClock(true); // Force update to reflect new format
+        });
+        
+        // Function to update a single card
+        function updateCard(card, currentValue, nextValue) {
+            // Make sure all animations are consistent by ensuring equal delays
+            setTimeout(() => {
+                // Update the flip elements with current and next values
+                const digitTopFlip = card.querySelector('.digit-top-flip .digit');
+                const digitBottomFlip = card.querySelector('.digit-bottom-flip .digit');
+                const currentValueDisplay = currentValue === -1 ? nextValue : currentValue;
+                
+                digitTopFlip.textContent = currentValueDisplay;
+                digitBottomFlip.textContent = nextValue;
+                
+                // Reset animation classes
+                card.classList.remove('flipping');
+                void card.offsetWidth; // Force reflow
+                
+                // Start the animation
+                card.classList.add('flipping');
+                
+                // After animation completes, update the static elements
+                setTimeout(() => {
+                    const digitTop = card.querySelector('.digit-top .digit');
+                    const digitBottom = card.querySelector('.digit-bottom .digit');
+                    
+                    digitTop.textContent = nextValue;
+                    digitBottom.textContent = nextValue;
+                }, 600); // Must match total animation duration (0.3s + 0.3s)
+            }, 10); // Small delay to ensure consistent animations
+        }
+        
+        // Initialize a card
+        function initCard(card, value) {
+            const digits = card.querySelectorAll('.digit');
+            digits.forEach(digit => digit.textContent = value);
+        }
+        
+        // Function to format numbers with leading zeros
+        function formatNumber(num, width) {
+            return num.toString().padStart(width, '0');
+        }
+        
+        // Function to update clock
+        function updateClock(forceUpdate = false) {
+            if (animationInProgress && !forceUpdate) return;
+            
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            let ampm = 'AM';
+            
+            // Handle AM/PM and format conversion
+            if (!is24HourFormat) {
+                if (hours >= 12) {
+                    ampm = 'PM';
+                }
+                if (hours > 12) {
+                    hours -= 12;
+                }
+                if (hours === 0) {
+                    hours = 12;
+                }
+            }
+            
+            // Update AM/PM display
+            ampmElement.textContent = is24HourFormat ? '' : ampm;
+            ampmElement.style.visibility = is24HourFormat ? 'hidden' : 'visible';
+            
+            // Format values
+            const hourDisplay = hours;
+            const minuteDisplay = formatNumber(minutes, 2);
+            
+            // First initialization - just set values without animation
+            if (lastHour === -1) {
+                initCard(hourCard, hourDisplay);
+                initCard(minuteCard, minuteDisplay);
+                
+                lastHour = hourDisplay;
+                lastMinute = minuteDisplay;
+                return;
+            }
+            
+            // Flag to track if any animation is started
+            let animationStarted = false;
+            
+            // Update only if changed or forced
+            if (forceUpdate || hourDisplay !== lastHour) {
+                updateCard(hourCard, lastHour, hourDisplay);
+                lastHour = hourDisplay;
+                animationStarted = true;
+            }
+            
+            if (forceUpdate || minuteDisplay !== lastMinute) {
+                updateCard(minuteCard, lastMinute, minuteDisplay);
+                lastMinute = minuteDisplay;
+                animationStarted = true;
+            }
+            
+            // If animation started, set a flag to prevent overlapping updates
+            if (animationStarted) {
+                animationInProgress = true;
+                setTimeout(() => {
+                    animationInProgress = false;
+                }, 650); // Slightly longer than animation to ensure it completes
+            }
+        }
+        
+        // Initialize clock and start updating
+        function initClock() {
+            // Set initial zoom level
+            document.querySelector('.flip-unit-container').style.transform = `scale(${currentZoom})`;
+            
+            // Add font class to all digits and AM/PM
+            document.querySelectorAll('.digit, .am-pm').forEach(element => {
+                element.classList.add(currentFont);
+            });
+            
+            // Check initial fullscreen state
+            checkFullscreen();
+            
+            // Check initial orientation
+            checkOrientation();
+            
+            // Set initial values without animation
+            updateClock();
+            
+            // Check and update every second to catch minute changes
+            setInterval(() => {
+                updateClock();
+            }, 1000);
+        }
+        
+        // Ensure everything is fully loaded before initializing
+        window.addEventListener('load', () => {
+            // Small delay to ensure DOM is fully rendered
+            setTimeout(initClock, 100);
+        });
+    </script>
+</body>
+</html>
