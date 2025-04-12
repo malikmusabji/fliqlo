@@ -329,7 +329,7 @@
             text-align: right;
         }
         
-        /* Media queries for different devices */
+        
         @media (max-width: 768px) {
             .clock-container {
                 width: 98vw;
@@ -345,7 +345,7 @@
             }
         }
         
-        /* Vertical layout for mobile devices */
+        
         @media (max-width: 600px), (orientation: portrait) {
             .flip-unit-container {
                 flex-direction: column;
@@ -378,7 +378,7 @@
             }
         }
 
-        /* Digital font */
+        
         @font-face {
             font-family: 'Segment7';
             src: url('https://cdnjs.cloudflare.com/ajax/libs/Seven-Segment/1.0.0/Seven-Segment.woff') format('woff');
@@ -386,7 +386,7 @@
             font-style: normal;
         }
     </style>
-    <!-- Additional font imports -->
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Montserrat:wght@700&family=Roboto:wght@700&display=swap" rel="stylesheet">
 </head>
@@ -427,7 +427,7 @@
         </div>
     </div>
 
-    <!-- Controls -->
+    
     <div class="controls">
         <button class="controls-toggle" id="controlsToggle">⚙</button>
         <div class="controls-panel" id="controlsPanel">
@@ -464,7 +464,7 @@
     </div>
 
     <script>
-        // Global variables
+       
         let is24HourFormat = false;
         let lastHour = -1;
         let lastMinute = -1;
@@ -473,7 +473,7 @@
         let currentFont = 'font-impact'; // Default font set to Impact
         let isFullscreen = false;
         
-        // Get DOM elements
+        
         const hourCard = document.getElementById('hour-card');
         const minuteCard = document.getElementById('minute-card');
         const ampmElement = document.getElementById('ampm');
@@ -484,14 +484,14 @@
         const formatSelect = document.getElementById('formatSelect');
         const fullscreenMessage = document.getElementById('fullscreenMessage');
         
-        // Fullscreen detection
+       
         function checkFullscreen() {
             isFullscreen = document.fullscreenElement ||
                 document.webkitFullscreenElement ||
                 document.mozFullScreenElement ||
                 document.msFullscreenElement;
                 
-            // Hide fullscreen message if in fullscreen mode
+            
             if (isFullscreen) {
                 fullscreenMessage.style.display = 'none';
             } else {
@@ -499,18 +499,17 @@
             }
         }
         
-        // Add fullscreen event listeners
+      
         document.addEventListener('fullscreenchange', checkFullscreen);
         document.addEventListener('webkitfullscreenchange', checkFullscreen);
         document.addEventListener('mozfullscreenchange', checkFullscreen);
         document.addEventListener('MSFullscreenChange', checkFullscreen);
         
-        // Controls toggle
+      
         controlsToggle.addEventListener('click', () => {
             controlsPanel.classList.toggle('visible');
         });
         
-        // Hide controls when clicking elsewhere
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.controls') && controlsPanel.classList.contains('visible')) {
                 controlsPanel.classList.remove('visible');
